@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ungu">#6A1B9A</color>
+    <color name="pink">#EC407A</color>
+    <color name="biru">#1E88E5</color>
+    <color name="biru2">#42A5F5</color>
+    <color name="hijau">#43A047</color>
+    <color name="hijau2">#66BB6A</color>
+    <color name="oranye">#FB8C00</color>
+    <color name="oranye2">#FFA726</color>
+    <color name="merah">#E53935</color>
+    <color name="latar">#F7F4FB</color>
+    <color name="teks">#263238</color>
+    <color name="abu">#78909C</color>
+</resources>

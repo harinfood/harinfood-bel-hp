@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BelPintu" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/ungu</item>
+        <item name="android:colorPrimaryDark">@color/ungu</item>
+        <item name="android:colorAccent">@color/pink</item>
+        <item name="android:statusBarColor">@color/ungu</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/latar</item>
+    </style>
+</resources>
