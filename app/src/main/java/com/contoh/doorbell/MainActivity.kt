@@ -16,6 +16,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.animation.OvershootInterpolator
@@ -246,8 +247,8 @@ class MainActivity : Activity(), ItagService.Pendengar {
     }
 
     private fun mulaiPindai() {
-        if (!bluetoothAktif()) return
         pastikanIzin {
+            if (!bluetoothAktif()) return@pastikanIzin
             adapterPerangkat.setData(emptyList())
             txtPindai.text = "Mencari perangkat di sekitar..."
             kartuPindai.visibility = View.VISIBLE
@@ -290,7 +291,15 @@ class MainActivity : Activity(), ItagService.Pendengar {
         }
         if (!adapter.isEnabled) {
             Toast.makeText(this, "Nyalakan Bluetooth dulu", Toast.LENGTH_SHORT).show()
-            startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            try {
+                startActivity(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            } catch (e: Exception) {
+                try {
+                    startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+                } catch (e2: Exception) {
+                    Toast.makeText(this, "Nyalakan Bluetooth lewat pengaturan HP", Toast.LENGTH_LONG).show()
+                }
+            }
             return false
         }
         return true
