@@ -7,6 +7,8 @@ import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.GradientDrawable
@@ -53,6 +55,7 @@ class MainActivity : Activity(), ItagService.Pendengar {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        tampilkanCrashTerakhir()
 
         kartuStatus = findViewById(R.id.kartuStatus)
         dot = findViewById(R.id.dot)
@@ -298,11 +301,33 @@ class MainActivity : Activity(), ItagService.Pendengar {
             action = aksi
             if (mac != null) putExtra(ItagService.EXTRA_MAC, mac)
         }
-        if (Build.VERSION.SDK_INT >= 26) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
+        try {
+            if (Build.VERSION.SDK_INT >= 26) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Gagal menjalankan layanan: ${e.message}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    // ---------- Laporan error ----------
+
+    private fun tampilkanCrashTerakhir() {
+        val laporan = CrashLogger.ambil(this) ?: return
+        AlertDialog.Builder(this)
+            .setTitle("Aplikasi berhenti tak terduga")
+            .setMessage(laporan)
+            .setPositiveButton("Salin") { _, _ ->
+                val klip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                klip.setPrimaryClip(ClipData.newPlainText("Laporan error", laporan))
+                Toast.makeText(this, "Laporan disalin, kirim ke pengembang", Toast.LENGTH_LONG).show()
+                CrashLogger.hapus(this)
+            }
+            .setNegativeButton("Abaikan") { _, _ -> CrashLogger.hapus(this) }
+            .setCancelable(false)
+            .show()
     }
 
     // ---------- Izin ----------
