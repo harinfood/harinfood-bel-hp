@@ -10,7 +10,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 
-/** Layanan latar depan: menjaga koneksi iTag tetap hidup dan memutar bel saat tombol ditekan. */
+/** Layanan latar depan: menjaga koneksi iTag dan memutar bel saat tombol ditekan. */
 class ItagService : Service() {
 
     interface Pendengar {
@@ -22,6 +22,7 @@ class ItagService : Service() {
         const val AKSI_SAMBUNG = "com.contoh.doorbell.SAMBUNG"
         const val AKSI_BUNYIKAN = "com.contoh.doorbell.BUNYIKAN"
         const val AKSI_PUTUS = "com.contoh.doorbell.PUTUS"
+        const val AKSI_LUPAKAN = "com.contoh.doorbell.LUPAKAN"
         const val EXTRA_MAC = "mac"
 
         private const val KANAL = "doorbell_itag"
@@ -32,7 +33,6 @@ class ItagService : Service() {
     }
 
     private lateinit var koneksi: ItagConnection
-    private lateinit var pemutar: PemutarBel
     private var terakhirTekan = 0L
     private var pesanTerakhir = "Menyiapkan..."
     private var statusTerakhir = ItagConnection.TERPUTUS
@@ -40,7 +40,6 @@ class ItagService : Service() {
     override fun onCreate() {
         super.onCreate()
         buatKanal()
-        pemutar = PemutarBel(this)
         koneksi = ItagConnection(this, object : ItagConnection.Listener {
             override fun onStatus(status: Int, pesan: String) {
                 statusTerakhir = status
@@ -54,7 +53,7 @@ class ItagService : Service() {
                 val sekarang = System.currentTimeMillis()
                 if (sekarang - terakhirTekan < 2500L) return
                 terakhirTekan = sekarang
-                pemutar.mainkan()
+                PemutarBel.mainkan(applicationContext)
                 pendengar?.onBelDitekan()
             }
 
@@ -69,25 +68,50 @@ class ItagService : Service() {
 
         when (intent?.action) {
             AKSI_SAMBUNG -> {
+                Pengaturan.setInginTersambung(this, true)
                 val mac = intent?.getStringExtra(EXTRA_MAC) ?: Pengaturan.itagTersimpan(this)?.mac
-                if (mac != null) koneksi.sambung(mac)
+                if (mac != null) {
+                    koneksi.sambung(mac)
+                } else {
+                    pendengar?.onStatus(ItagConnection.TERPUTUS, "Pilih iTag terlebih dahulu")
+                }
             }
+
             AKSI_BUNYIKAN -> {
                 if (!koneksi.bunyikan()) {
                     pendengar?.onStatus(statusTerakhir, "iTag belum siap, tunggu sebentar")
                 }
             }
+
             AKSI_PUTUS -> {
+                // iTag tetap tersimpan, jadi bisa disambungkan lagi dengan tombol Sambungkan
+                Pengaturan.setInginTersambung(this, false)
                 koneksi.tutup()
-                Pengaturan.hapusItag(this)
                 statusTerakhir = ItagConnection.TERPUTUS
-                pendengar?.onStatus(ItagConnection.TERPUTUS, "iTag diputuskan")
+                pendengar?.onStatus(ItagConnection.TERPUTUS, "iTag diputuskan. Ketuk Sambungkan untuk menyambung lagi.")
                 stopForeground(true)
                 stopSelf()
             }
+
+            AKSI_LUPAKAN -> {
+                Pengaturan.setInginTersambung(this, false)
+                koneksi.tutup()
+                Pengaturan.hapusItag(this)
+                statusTerakhir = ItagConnection.TERPUTUS
+                pendengar?.onStatus(ItagConnection.TERPUTUS, "iTag dilupakan. Pilih iTag untuk memasangkan lagi.")
+                stopForeground(true)
+                stopSelf()
+            }
+
             else -> {
-                // Dipanggil ulang oleh sistem setelah aplikasi dihentikan: sambung kembali
-                Pengaturan.itagTersimpan(this)?.let { koneksi.sambung(it.mac) }
+                // Dipanggil ulang oleh sistem setelah layanan dihentikan
+                val tersimpan = Pengaturan.itagTersimpan(this)
+                if (Pengaturan.inginTersambung(this) && tersimpan != null) {
+                    koneksi.sambung(tersimpan.mac)
+                } else {
+                    stopForeground(true)
+                    stopSelf()
+                }
             }
         }
         return START_STICKY
@@ -97,7 +121,7 @@ class ItagService : Service() {
 
     override fun onDestroy() {
         koneksi.tutup()
-        pemutar.lepas()
+        PemutarBel.lepas()
         super.onDestroy()
     }
 

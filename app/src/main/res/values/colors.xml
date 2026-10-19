@@ -12,4 +12,8 @@
     <color name="latar">#F7F4FB</color>
     <color name="teks">#263238</color>
     <color name="abu">#78909C</color>
+    <color name="merah2">#EF5350</color>
+    <color name="teal">#00897B</color>
+    <color name="teal2">#26A69A</color>
+    <color name="abu2">#90A4AE</color>
 </resources>

@@ -8,6 +8,7 @@ object Pengaturan {
     private const val NAMA_FILE = "doorbell_pengaturan"
     private const val KUNCI_MAC = "mac_itag"
     private const val KUNCI_NAMA_ITAG = "nama_itag"
+    private const val KUNCI_INGIN_TERSAMBUNG = "ingin_tersambung"
     private const val KUNCI_NAMA_SUARA = "nama_suara"
     private const val NAMA_SALINAN = "bel_kustom.mp3"
 
@@ -30,7 +31,18 @@ object Pengaturan {
     }
 
     fun hapusItag(context: Context) {
-        prefs(context).edit().remove(KUNCI_MAC).remove(KUNCI_NAMA_ITAG).apply()
+        prefs(context).edit()
+            .remove(KUNCI_MAC)
+            .remove(KUNCI_NAMA_ITAG)
+            .apply()
+    }
+
+    /** False jika pengguna menekan Putuskan, agar aplikasi tidak menyambung otomatis. */
+    fun inginTersambung(context: Context): Boolean =
+        prefs(context).getBoolean(KUNCI_INGIN_TERSAMBUNG, false)
+
+    fun setInginTersambung(context: Context, nilai: Boolean) {
+        prefs(context).edit().putBoolean(KUNCI_INGIN_TERSAMBUNG, nilai).apply()
     }
 
     fun fileSuara(context: Context): File = File(context.filesDir, NAMA_SALINAN)

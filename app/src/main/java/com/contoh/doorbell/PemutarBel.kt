@@ -4,15 +4,13 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 
-/** Memutar mp3 pilihan, atau nada bel bawaan jika belum memilih. */
-class PemutarBel(private val context: Context) {
+/** Pemutar tunggal, sehingga musik bisa dihentikan dari layanan maupun tampilan. */
+object PemutarBel {
 
     private var pemutar: MediaPlayer? = null
 
-    fun mainkan() {
-        pemutar?.release()
-        pemutar = null
-
+    fun mainkan(context: Context) {
+        hentikan()
         val p = MediaPlayer()
         try {
             p.setAudioAttributes(
@@ -42,8 +40,19 @@ class PemutarBel(private val context: Context) {
         }
     }
 
-    fun lepas() {
-        pemutar?.release()
+    /** Menghentikan musik yang sedang berbunyi, termasuk bel dari iTag. */
+    fun hentikan() {
+        val p = pemutar ?: return
         pemutar = null
+        try {
+            p.stop()
+        } catch (e: IllegalStateException) {
+            // Sudah berhenti, abaikan
+        }
+        p.release()
+    }
+
+    fun lepas() {
+        hentikan()
     }
 }

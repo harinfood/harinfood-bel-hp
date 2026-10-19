@@ -205,17 +205,62 @@
                     android:textSize="15sp" />
 
                 <Button
+                    android:id="@+id/btnHentikan"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:drawablePadding="8dp"
+                    android:layout_marginStart="12dp"
+                    android:text="Hentikan Musik"
+                    android:textSize="15sp" />
+
+            </LinearLayout>
+
+            <!-- Tombol baris 3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+
+                <Button
+                    android:id="@+id/btnSambung"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:drawablePadding="8dp"
+                    android:text="Sambungkan"
+                    android:textSize="15sp" />
+
+                <Button
                     android:id="@+id/btnPutus"
                     android:layout_width="0dp"
                     android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:layout_marginStart="12dp"
                     android:minHeight="0dp"
                     android:minWidth="0dp"
                     android:drawablePadding="8dp"
+                    android:layout_marginStart="12dp"
                     android:text="Putuskan"
                     android:textSize="15sp" />
+
             </LinearLayout>
+
+            <!-- Tombol baris 4 -->
+            <Button
+                android:id="@+id/btnLupakan"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:drawablePadding="8dp"
+                android:text="Lupakan iTag"
+                android:textSize="14sp" />
 
             <!-- Hasil pindai -->
             <LinearLayout

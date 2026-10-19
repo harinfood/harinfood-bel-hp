@@ -47,7 +47,6 @@ class MainActivity : Activity(), ItagService.Pendengar {
     private lateinit var adapterPerangkat: PerangkatAdapter
 
     private val pemindai by lazy { PemindaiItag(this) }
-    private val pemutarTes by lazy { PemutarBel(this) }
     private var aksiTertunda: (() -> Unit)? = null
     private var animasiDot: ObjectAnimator? = null
 
@@ -69,7 +68,10 @@ class MainActivity : Activity(), ItagService.Pendengar {
         gayaTombol(findViewById<Button>(R.id.btnPilih), getColor(R.color.biru), getColor(R.color.biru2), R.drawable.ic_bluetooth)
         gayaTombol(findViewById<Button>(R.id.btnMp3), getColor(R.color.ungu), getColor(R.color.pink), R.drawable.ic_musik)
         gayaTombol(findViewById<Button>(R.id.btnTes), getColor(R.color.hijau), getColor(R.color.hijau2), R.drawable.ic_play)
+        gayaTombol(findViewById<Button>(R.id.btnHentikan), getColor(R.color.merah), getColor(R.color.merah2), R.drawable.ic_stop)
+        gayaTombol(findViewById<Button>(R.id.btnSambung), getColor(R.color.teal), getColor(R.color.teal2), R.drawable.ic_bluetooth)
         gayaTombol(findViewById<Button>(R.id.btnPutus), getColor(R.color.oranye), getColor(R.color.oranye2), R.drawable.ic_silang)
+        gayaTombol(findViewById<Button>(R.id.btnLupakan), getColor(R.color.abu), getColor(R.color.abu2), R.drawable.ic_silang)
 
         // Ukuran tombol bel menyesuaikan lebar layar
         val lebarBel = (resources.configuration.screenWidthDp * 0.5f).coerceIn(150f, 220f).toInt()
@@ -86,8 +88,11 @@ class MainActivity : Activity(), ItagService.Pendengar {
 
         findViewById<Button>(R.id.btnPilih).setOnClickListener { mulaiPindai() }
         findViewById<Button>(R.id.btnMp3).setOnClickListener { bukaPemilihMp3() }
-        findViewById<Button>(R.id.btnTes).setOnClickListener { pemutarTes.mainkan() }
+        findViewById<Button>(R.id.btnTes).setOnClickListener { PemutarBel.mainkan(applicationContext) }
+        findViewById<Button>(R.id.btnHentikan).setOnClickListener { hentikanMusik() }
+        findViewById<Button>(R.id.btnSambung).setOnClickListener { sambungUlang() }
         findViewById<Button>(R.id.btnPutus).setOnClickListener { putusItag() }
+        findViewById<Button>(R.id.btnLupakan).setOnClickListener { konfirmasiLupakan() }
         findViewById<TextView>(R.id.btnTutupPindai).setOnClickListener {
             pemindai.berhenti()
             kartuPindai.visibility = View.GONE
@@ -97,7 +102,9 @@ class MainActivity : Activity(), ItagService.Pendengar {
         listPerangkat.adapter = adapterPerangkat
 
         perbaruiTampilan()
-        if (Pengaturan.itagTersimpan(this) != null) {
+
+        // Sambung otomatis hanya jika pengguna belum menekan Putuskan
+        if (Pengaturan.itagTersimpan(this) != null && Pengaturan.inginTersambung(this)) {
             pastikanIzin { jalankanServis(ItagService.AKSI_SAMBUNG) }
         }
     }
@@ -116,7 +123,6 @@ class MainActivity : Activity(), ItagService.Pendengar {
     override fun onDestroy() {
         super.onDestroy()
         pemindai.berhenti()
-        pemutarTes.lepas()
     }
 
     // ---------- Callback dari layanan ----------
@@ -144,6 +150,8 @@ class MainActivity : Activity(), ItagService.Pendengar {
         }
         if (tersimpan == null) {
             onStatus(ItagConnection.TERPUTUS, "Ketuk Pilih iTag untuk memulai")
+        } else if (!Pengaturan.inginTersambung(this)) {
+            onStatus(ItagConnection.TERPUTUS, "iTag diputuskan. Ketuk Sambungkan untuk menyambung lagi.")
         }
     }
 
@@ -203,10 +211,35 @@ class MainActivity : Activity(), ItagService.Pendengar {
         pastikanIzin { jalankanServis(ItagService.AKSI_BUNYIKAN) }
     }
 
+    private fun hentikanMusik() {
+        PemutarBel.hentikan()
+        Toast.makeText(this, "Musik dihentikan", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun sambungUlang() {
+        if (Pengaturan.itagTersimpan(this) == null) {
+            Toast.makeText(this, "Pilih iTag terlebih dahulu", Toast.LENGTH_SHORT).show()
+            return
+        }
+        pastikanIzin { jalankanServis(ItagService.AKSI_SAMBUNG) }
+    }
+
     private fun putusItag() {
         jalankanServis(ItagService.AKSI_PUTUS)
         Toast.makeText(this, "iTag diputuskan", Toast.LENGTH_SHORT).show()
         perbaruiTampilan()
+    }
+
+    private fun konfirmasiLupakan() {
+        AlertDialog.Builder(this)
+            .setTitle("Lupakan iTag?")
+            .setMessage("iTag akan dihapus dari aplikasi. Kamu perlu memilih ulang untuk menyambung lagi.")
+            .setPositiveButton("Lupakan") { _, _ ->
+                jalankanServis(ItagService.AKSI_LUPAKAN)
+                perbaruiTampilan()
+            }
+            .setNegativeButton("Batal", null)
+            .show()
     }
 
     private fun mulaiPindai() {
